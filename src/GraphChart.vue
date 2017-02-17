@@ -1,7 +1,6 @@
 <template>
     <div>
-          <v-btn secondary v-on:click.native="fetchData" class="white--text"> Fetch Data</v-btn>
-        <svg width="960" height="600"></svg>
+        <svg width="960" height="600"><rect style="width:100%;height:100%;" fill="black"></rect></svg>
     </div>
 </template>
 
@@ -111,7 +110,12 @@
     }
 </script>
 
-<style type="text/css">
+<style scoped>
+    svg{
+        width: 100%;
+        height: 600px;
+    }
+
     .links line {
       stroke: #999;
       stroke-opacity: 0.6;

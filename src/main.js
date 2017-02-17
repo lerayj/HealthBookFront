@@ -3,6 +3,7 @@ import App from './App.vue';
 import Vuetify from 'vuetify';
 import Vuex from 'vuex';
 import VueRouter from 'vue-router';
+import _ from 'lodash';
 
 Vue.use(Vuetify);
 Vue.use(Vuex);
@@ -21,16 +22,17 @@ const API_URL = "http://localhost:3000";
 
 const store = new Vuex.Store({
     state: {
-        count: 0,
         har: undefined,
-        reportsFolders: undefined
+        reportsFolders: undefined,
+        currentFolder: undefined
     },
     mutations: {
-        increment (state) {
-          state.count++
-        },
         refreshReportsList (state, data) {
             state.reportsFolders = data;
+            state.currentFolder = data;
+        },
+        refreshCurrentFolder (state, data) {
+            state.currentFolder = data;
         }
     },
     actions: {
@@ -39,9 +41,30 @@ const store = new Vuex.Store({
                 if(err)
                     console.log("Error on fetching report list.");
                 var folderList = JSON.parse(body);
-                console.log("response: ", JSON.parse(body));
                 commit('refreshReportsList', folderList);
             })
+        },
+        goToFolder({ commit, state }, path) {
+            function searchTree(node, path){
+                 if(node.path == path){
+                      return node;
+                 }else if (node.children != null){
+                      var result;
+                      for(var i=0; result == null && i < node.children.length; i++){
+                           result = searchTree(node.children[i], path);
+                      }
+                      return result;
+                 }
+                 return null;
+            }
+
+            var tree = state.reportsFolders;
+            if(tree.path != path){
+                var result = searchTree(tree, path);
+                if(result)
+                    commit('refreshCurrentFolder', result);
+
+            }
         }
     }
 });
