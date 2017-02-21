@@ -1,6 +1,6 @@
 <template>
     <div>
-        <svg width="960" height="600"><rect style="width:100%;height:100%;" fill="black"></rect></svg>
+        <svg width="960" height="600"></svg>
     </div>
 </template>
 
@@ -42,8 +42,6 @@
               .data(this.data.nodes)
               .enter().append("circle")
                 .attr("r", (d) => {
-                  console.log("d.value: ", d.value, " maxNodeValue: ", maxNodeValue);
-                  console.log("Scale: ", (d.value) / maxNodeValue);
                   return ((d.value / maxNodeValue) * 20) + 2;
               })
                 .attr("fill", function(d) { return color(d.group); })
@@ -94,9 +92,7 @@
 
             function clicked(d, i) {
             if (d3.event.defaultPrevented) return; // dragged
-            console.log("d: ", d, " i: ", i, "this: ", this);
             var initialRad = d3.select(this).attr("r");
-            console.log("init: ",initialRad );
             d3.select(this).transition()
                 .style("fill", "black")
                 .attr("r", 64)
@@ -108,14 +104,14 @@
     }
 </script>
 
-<style scoped>
+<style >
     svg{
         width: 100%;
         height: 600px;
     }
 
     .links line {
-      stroke: #999;
+      stroke: #2c3e50;
       stroke-opacity: 0.6;
     }
 

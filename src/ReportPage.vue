@@ -1,42 +1,40 @@
 <template>
     <div>
-    <GraphChart v-bind:data="graphData()" v-if="graphData()"/>
-    <div v-else>Waiting for data</div>
-    <v-card>
-        <v-card-row class="green darken-1">
-            <v-card-title>
-                <span class="white--text">Marriot Rewards</span>
-                <v-spacer></v-spacer>
-            </v-card-title>
-        </v-card-row>
-        <v-card-row>
-            <v-card-text>
-            <div>
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-            tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-            quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-            consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-            cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-            proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</div>
-            </v-card-text>
-        </v-card-row>
-    </v-card>
+      <GraphChart v-bind:data="graphData()" v-if="graphData()"/>
+      <div v-else>Waiting for data</div>
+      <h2>Cookies</h2>
+      <v-row>
+      <CookiesCard v-for="item in cookiesData" v-bind:headTitle="item.host" v-bind:list="item.cookies" />
+      </v-row>
     </div>
 </template>
 
 <script type="text/javascript">
     import GraphChart from './GraphChart.vue';
+    import CookiesCard from './CookiesCard.vue';
     import urlParse from 'url-parse';
 
     export default {
         components: {
-            GraphChart
+            GraphChart,
+            CookiesCard
         },
         created() {
             this.fetchData();
         },
         watch: {
             '$route': 'fetchData'
+        },
+        computed: {
+          cookiesData : function(){
+            var har = this.$store.state.har;
+            console.log("cookiesData Undefined");
+            if(har){
+              console.log("cookiesData OK: ", linkCookiesToDomain(har));
+
+              return linkCookiesToDomain(har);
+            }
+          }
         },
         methods: {
             fetchData (){
@@ -47,8 +45,9 @@
                 console.log("HAR graph data: ", this.$store.state.har);
                 var har = this.$store.state.har;
                 if(har){
+                  linkCookiesToDomain(har);
                   var assets = har[2].assets;
-                  console.log("assets: ", assets);
+                  //console.log("assets: ", assets);
                   var results = _.chain(assets)
                       .groupBy((ite) => {
                           if(ite.headers.request.referer)
@@ -87,14 +86,7 @@
 
                   var final = _.concat(sourceUniq, targetUniq);
 
-                  _.each(final, (elem) => {
-                      if(har[2].domains[elem])
-                          console.log("OK go: ", har[2].domains[elem]);
-
-                  });
-
                   var nodes = _.map(final, (elem, key) => {
-                      console.log("key: ", key);
                       var val = 5;
                       if(har[2].domains[elem])
                           val = har[2].domains[elem].transferSize;
@@ -103,10 +95,43 @@
 
                   var graph = {nodes, links};
                   return graph;
-                  console.log("graph: ", graph);
+                  // console.log("graph: ", graph);
                 }
                 return har;
             }
         }
     }
+
+
+    function linkCookiesToDomain(harData){
+      var assets = harData[2].assets;
+      var result = _.chain(assets)
+        .filter((elem) => {
+          return elem.headers.request["cookie"] && 
+          (elem.headers.request.host || elem.headers.request[":authority"])
+        })
+        .map((elem) => {
+          var host = elem.headers.request.host || elem.headers.request[":authority"];
+          return {host, cookies: elem.headers.request["cookie"]}
+        })
+        .groupBy(e => e.host)
+        .map((arr, k) => {
+          var max = _.reduce(arr, (result, val) => result.lenght < val.lenght ? val : result);
+          max.cookies = max.cookies.split("; ");
+          max.cookies = _.map(max.cookies, (e) => {
+            var temp = e.split('=');
+            var key = temp.shift();
+            return {key, value: temp.join()};
+          });
+          return max;
+        })
+        .value()
+        .sort((a, b) => {
+          return b.cookies.length - a.cookies.length;
+        });
+        console.log("result: ", result);
+        return result;
+        
+      };
+
 </script>
