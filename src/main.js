@@ -33,6 +33,9 @@ const store = new Vuex.Store({
         },
         refreshCurrentFolder (state, data) {
             state.currentFolder = data;
+        },
+        refreshHarData (state, data) {
+            state.har = data;
         }
     },
     actions: {
@@ -42,7 +45,18 @@ const store = new Vuex.Store({
                     console.log("Error on fetching report list.");
                 var folderList = JSON.parse(body);
                 commit('refreshReportsList', folderList);
-            })
+            });
+        },
+        fetchHarData({ commit, state }, data) {
+            var queryString = "?url=" + data.website;
+            request(API_URL + "/report" + queryString, (err, response, body) =>{
+                if(err)
+                    console.log("Error on fetching report list.");
+
+                var harData = JSON.parse(body);
+                console.log("harData: ", harData);
+                commit('refreshHarData', harData);
+            });
         },
         goToFolder({ commit, state }, path) {
             function searchTree(node, path){
