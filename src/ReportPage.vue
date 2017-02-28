@@ -4,7 +4,7 @@
       <div v-else>Waiting for data</div>
       <h2>Cookies</h2>
       <v-row>
-      <CookiesCard v-for="item in cookiesData" v-bind:headTitle="item.host" v-bind:list="item.cookies" />
+      <CookiesCard v-for="item in cookiesData" v-bind:headTitle="item.domain" v-bind:subdomains="item.subdomains" />
       </v-row>
     </div>
 </template>
@@ -125,9 +125,23 @@
           });
           return max;
         })
+        .groupBy(e => {
+          var temp = e.host.split('.');
+          console.log("test: ", temp[temp.length - 2]);
+          return temp[temp.length - 2];
+        })
+        .map((arr, k) => {
+          console.log("e: ", arr, " k: ", k);
+          var enrich = _.map(arr, (e) => {
+            var subdomain = e.host.split('.')[0];
+            return {subdomain, cookies: e.cookies};
+          });
+          return {domain: k, subdomains: enrich};
+        })
         .value()
         .sort((a, b) => {
-          return b.cookies.length - a.cookies.length;
+
+          return b.subdomains.length - a.subdomains.length;
         });
         console.log("result: ", result);
         return result;
