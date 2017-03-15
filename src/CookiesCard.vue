@@ -48,7 +48,6 @@
         props:['headTitle', 'subdomains'],
         computed: {
             nbCookiesDomain: function(){
-                console.log("this: ", this);
                 return _.reduce(this.subdomains, (sum, e) => {
                     return e.cookies.length + sum;
                 }, 0);

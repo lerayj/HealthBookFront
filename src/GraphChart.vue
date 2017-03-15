@@ -1,45 +1,59 @@
 <template>
-    <div>
+<v-row>
+  <v-col xs8="xs8">
+        <SettingsGraphCard/>
         <svg width="960" height="600"></svg>
-    </div>
+  </v-col>
+    <v-col xs4="xs4">
+      <InfosGraphCard v-bind:node="node" v-bind:data="data"/>
+    </v-col>
+</v-row>
+
 </template>
 
 <script type="text/javascript">
     import * as d3 from 'd3';
+    import InfosGraphCard from './InfosGraphCard.vue';
+    import SettingsGraphCard from './SettingsGraphCard.vue';
+    import _ from 'lodash';
 
     export default {
         name: 'GraphChart',
         props: ['data'],
-
-        mounted(){
-            console.log("HAR on mounted: ", this.data);
-            
-            var svg = d3.select("svg"),
-              width = +svg.attr("width"),
-              height = +svg.attr("height");
-
-            var color = d3.scaleOrdinal(d3.schemeCategory20);
-
-            var simulation = d3.forceSimulation()
-              .force("link", d3.forceLink().id(function(d) { return d.id; }))
-              .force("charge", d3.forceManyBody())
-              .force("center", d3.forceCenter(width / 2, height / 2));
-
-
-            var link = svg.append("g")
+        components: {
+          InfosGraphCard,
+          SettingsGraphCard
+        },
+        computed: {
+          node: function(){
+            return this.$store.state.selectedGraphNode;
+          }
+        },
+        watch: {
+          data: function(newData) {
+            console.log("WATCH;");
+            //TODO:Rework the update
+            //this.drawChart(newData);
+          }
+        },
+        methods : {
+          drawChart: function(data){
+            var self = this;
+            var link = this.svg.append("g")
                 .attr("class", "links")
               .selectAll("line")
-              .data(this.data.links)
+              .data(data.links)
               .enter().append("line")
                 .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
 
-              var maxNodeValue = d3.max(this.data.nodes, e => e.value);
+            var maxNodeValue = d3.max(data.nodes, e => e.value);
 
+            var color = d3.scaleOrdinal(d3.schemeCategory20);
 
-            var node = svg.append("g")
+            var node = this.svg.append("g")
                 .attr("class", "nodes")
               .selectAll("circle")
-              .data(this.data.nodes)
+              .data(data.nodes)
               .enter().append("circle")
                 .attr("r", (d) => {
                   return ((d.value / maxNodeValue) * 20) + 2;
@@ -54,12 +68,13 @@
             node.append("title")
                 .text(function(d) { return d.id; });
 
-            simulation
-                .nodes(this.data.nodes)
+            this.simulation
+                .nodes(data.nodes)
                 .on("tick", ticked);
 
-            simulation.force("link")
-                .links(this.data.links).distance(50);
+            this.simulation.force("link")
+                .links(data.links).distance(50);
+
 
             function ticked() {
               link
@@ -74,7 +89,7 @@
             }
 
             function dragstarted(d) {
-            if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+            if (!d3.event.active) self.simulation.alphaTarget(0.3).restart();
             d.fx = d.x;
             d.fy = d.y;
             }
@@ -85,21 +100,40 @@
             }
 
             function dragended(d) {
-            if (!d3.event.active) simulation.alphaTarget(0);
+            if (!d3.event.active) self.simulation.alphaTarget(0);
             d.fx = null;
             d.fy = null;
             }
 
             function clicked(d, i) {
-            if (d3.event.defaultPrevented) return; // dragged
-            var initialRad = d3.select(this).attr("r");
-            d3.select(this).transition()
-                .style("fill", "black")
-                .attr("r", 64)
-              .transition()
-                .attr("r", initialRad)
-                .style("fill", color(i));
+              if (d3.event.defaultPrevented) return; // dragged
+              var initialRad = d3.select(this).attr("r");
+              d3.select(this).transition()
+                  .style("fill", "black")
+                  .attr("r", 64)
+                .transition()
+                  .attr("r", initialRad)
+                  .style("fill", color(i));
+              self.$store.dispatch('selectedNode', d);
             }
+          }
+        },
+        mounted(){
+            var self = this;
+
+            var svg = d3.select("svg"),
+              width = +svg.attr("width"),
+              height = +svg.attr("height");
+
+            this.svg = svg;
+
+            this.simulation = d3.forceSimulation()
+              .force("link", d3.forceLink().id(function(d) { return d.id; }))
+              .force("charge", d3.forceManyBody())
+              .force("center", d3.forceCenter(width / 2, height / 2));
+            
+            this.drawChart(this.data);
+
         }
     }
 </script>

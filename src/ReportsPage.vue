@@ -11,8 +11,8 @@
                 <h2 class="title">Create new website report</h2>
               </v-card-text>
               <v-card-text class="subheading grey--text">
-              <p>Just poy past a website URL on the field. You will be notified once the reports as been generated. This operation could take few minutes.</p>
-              <v-text-input class="mt-2" id="test2" name="test2" label="Testing 2" placeholder="http://google.com"></v-text-input>
+              <p>Just copy-past a website URL on the field. You will be notified once the reports as been generated. This operation could take few minutes.</p>
+              <v-text-input class="mt-2" id="test2" name="test2" label="Testing 2" v-model="url" placeholder="http://google.com"></v-text-input>
               </v-card-text>
               <v-card-row actions>
                 <v-spacer></v-spacer>
@@ -33,7 +33,8 @@
         },
         data () {
             return {
-                modal: false
+                modal: false,
+                url: undefined
             }
         },
         created() {
@@ -48,6 +49,10 @@
             },
             createReport() {
                 console.log("create report");
+                if(this.url){
+                    console.log("URL: ", this.url)
+                    this.$store.dispatch('generateReport', this.url);
+                }
             }
         }
         

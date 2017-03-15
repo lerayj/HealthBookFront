@@ -28,26 +28,19 @@
         computed: {
           cookiesData : function(){
             var har = this.$store.state.har;
-            console.log("cookiesData Undefined");
             if(har){
-              console.log("cookiesData OK: ", linkCookiesToDomain(har));
-
               return linkCookiesToDomain(har);
             }
           }
         },
         methods: {
             fetchData (){
-                console.log("Params: ", this.$route.params);
                 this.$store.dispatch('fetchHarData', this.$route.params);
             },
             graphData: function(){
-                console.log("HAR graph data: ", this.$store.state.har);
                 var har = this.$store.state.har;
                 if(har){
-                  linkCookiesToDomain(har);
                   var assets = har[2].assets;
-                  //console.log("assets: ", assets);
                   var results = _.chain(assets)
                       .groupBy((ite) => {
                           if(ite.headers.request.referer)
@@ -60,8 +53,7 @@
                           return {referer: referer, hosts: hosts, count};
                       })
                       .value();
-
-
+                  console.log('Results: ', results);
                   var links = [];
                   _.each(results, (elem) =>{
                       var ref = elem.referer;
@@ -95,7 +87,6 @@
 
                   var graph = {nodes, links};
                   return graph;
-                  // console.log("graph: ", graph);
                 }
                 return har;
             }
@@ -127,11 +118,9 @@
         })
         .groupBy(e => {
           var temp = e.host.split('.');
-          console.log("test: ", temp[temp.length - 2]);
           return temp[temp.length - 2];
         })
         .map((arr, k) => {
-          console.log("e: ", arr, " k: ", k);
           var enrich = _.map(arr, (e) => {
             var subdomain = e.host.split('.')[0];
             return {subdomain, cookies: e.cookies};
@@ -143,7 +132,6 @@
 
           return b.subdomains.length - a.subdomains.length;
         });
-        console.log("result: ", result);
         return result;
         
       };
